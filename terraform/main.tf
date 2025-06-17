@@ -42,7 +42,7 @@ module "app" {
   location                      = var.location
   resource_group_name           = var.resource_group_name
   app_subnet_id                 = module.network.app_subnet_id
-  gateway_subnet_address_prefix = module.network.app_gw_subnet_id
+  gateway_subnet_address_prefix = var.subnets.gateway.address_prefix
   mysql_connection_string       = module.db.connection_string
 
   depends_on = [module.db, module.storage]
