@@ -1,7 +1,7 @@
 resource "random_string" "admin_username" {
   length  = 12
   upper   = false
-  special = true
+  special = false
 }
 
 resource "random_password" "admin_password" {
