@@ -14,7 +14,7 @@ variable "resource_group_name" {
 variable "location" {
   type        = string
   description = "Location of the resources"
-  default     = "westeurope"
+  default     = "swedencentral"
 }
 
 variable "storage_account_name" {
