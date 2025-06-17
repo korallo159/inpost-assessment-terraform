@@ -11,7 +11,7 @@ private_dns_zones = {
   database = "prod.mysql.database.azure.com"
 }
 
-location = "westeurope"
+location = "swedencentral"
 
 vnet_address_space = "10.0.0.0/16"
 
