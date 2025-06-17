@@ -1,0 +1,14 @@
+parameters:
+  tf_version: "1.12.2"
+
+steps:
+  - bash: |
+      set -e
+      echo "Installing Terraform version ${{ parameters.tf_version }}"
+      TMP_DIR="$(mktemp -d)"
+      wget -q -O "$TMP_DIR/terraform.zip" https://releases.hashicorp.com/terraform/${{ parameters.tf_version }}/terraform_${{ parameters.tf_version }}_linux_amd64.zip
+      unzip -o -qq "$TMP_DIR/terraform.zip" -d "$TMP_DIR"
+      sudo install -o root -g root -m 0755 "$TMP_DIR/terraform" /usr/local/bin/terraform
+      rm -rf "$TMP_DIR"
+      terraform version
+    displayName: "Install Terraform ${{ parameters.tf_version }}" 

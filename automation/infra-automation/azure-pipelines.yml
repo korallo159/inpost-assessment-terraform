@@ -1,0 +1,57 @@
+name: 'Inpost Assessment Infrastructure Automation'
+
+variables:
+  - group: arm-credentials
+  - name: TF_VERSION
+    value: '1.12.2'
+  - name: TF_WORKING_DIR
+    value: 'terraform'
+    
+  - name: ENV
+    ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.PullRequest.TargetBranch'], 'refs/heads/main')) }}:
+      value: 'prod'
+    ${{ if and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['System.PullRequest.TargetBranch'], 'refs/heads/main')) }}:
+      value: 'dev'
+
+stages:
+- stage: Plan
+  displayName: "Terraform Plan – ${{ variables.ENV }}"
+  jobs:
+    - job: TerraformPlan
+      displayName: "Terraform Plan – ${{ variables.ENV }}"
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+        - template: steps/terraform-plan.yml
+          parameters:
+            backend_config: backend-$(ENV).conf
+            tfvars: $(ENV).tfvars
+            artifact_name: $(ENV)_tfplan  
+            tf_working_dir: $(TF_WORKING_DIR)
+            tf_version: $(TF_VERSION)
+
+
+- stage: Apply
+  displayName: "Terraform Apply – ${{ variables.ENV }}"
+  dependsOn: Plan
+  condition: |
+    and(
+      succeeded('Plan'),
+      ne(variables['Build.Reason'], 'PullRequest'),
+      or(
+        eq(variables['Build.SourceBranchName'], 'dev'),
+        eq(variables['Build.SourceBranchName'], 'main')
+      )
+    )
+  jobs:
+    - job: TerraformApply
+      displayName: "Terraform Apply – ${{ variables.ENV }}"
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+        - template: steps/terraform-apply.yml
+          parameters:
+            backend_config: backend-$(ENV).conf
+            artifact_name: $(ENV)_tfplan
+            tf_working_dir: $(TF_WORKING_DIR)
+            tf_version: $(TF_VERSION) 

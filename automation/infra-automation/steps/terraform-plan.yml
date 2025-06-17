@@ -1,0 +1,45 @@
+parameters:
+  backend_config: ''
+  tfvars: ''
+  artifact_name: ''
+  tf_working_dir: 'terraform'
+  tf_version: '1.12.2'
+
+steps:
+  - checkout: self
+
+  - template: terraform-install.yml
+    parameters:
+      tf_version: ${{ parameters.tf_version }}
+
+  - bash: |
+      set -e
+      terraform fmt -check -recursive
+    displayName: "terraform fmt -check"
+    workingDirectory: ${{ parameters.tf_working_dir }}
+
+  - bash: |
+      set -e
+      terraform init -backend-config=../automation/infra-automation/backends/${{ parameters.backend_config }}
+      terraform validate
+    displayName: "terraform validate"
+    workingDirectory: ${{ parameters.tf_working_dir }}
+    env:
+      ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+  - bash: |
+      set -e
+      terraform plan -var-file=environments/${{ parameters.tfvars }} -out=tfplan
+    displayName: "terraform plan"
+    workingDirectory: ${{ parameters.tf_working_dir }}
+    env:
+      ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+  - publish: ${{ parameters.tf_working_dir }}/tfplan
+    artifact: ${{ parameters.artifact_name }} 
